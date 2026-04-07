@@ -1,0 +1,76 @@
+body {
+    background-color: #050505; /* Near black */
+    color: #00ffff; /* Neon Cyan */
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#game-container {
+    position: relative;
+    width: 400px;
+    height: 600px;
+    border: 10px solid #222;
+    border-radius: 15px;
+    background: #000;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+    overflow: hidden;
+}
+
+.screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#splash-img {
+    width: 90%;
+    border-radius: 5px;
+    box-shadow: 0 0 15px #00ffff;
+}
+
+h1 {
+    font-size: 24px;
+    text-shadow: 0 0 10px #00ffff;
+    margin-bottom: 30px;
+}
+
+button {
+    background: transparent;
+    border: 2px solid #00ffff;
+    color: #00ffff;
+    padding: 15px 30px;
+    margin: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    text-shadow: 0 0 5px #00ffff;
+}
+
+button:hover {
+    background: #00ffff;
+    color: #000;
+    box-shadow: 0 0 20px #00ffff;
+}
+
+canvas {
+    display: block;
+    image-rendering: pixelated; /* Keeps the retro look sharp */
+}
+
+#ui-layer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    color: #ff0000; /* Red for the score like a VFD display */
+    text-shadow: 0 0 5px #ff0000;
+    pointer-events: none;
+}
