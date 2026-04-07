@@ -23,15 +23,14 @@ let spawnRate = 1800;
 let lastSpawn = 0;
 let playerLane = 1;
 
+// The Bandit (Stays at Top)
 let badCar = { lane: 1, x: 150, y: 60, w: 50, h: 80, targetLane: 1, lastMove: 0 };
 
-// --- SCREEN NAVIGATION ---
 function showOptions() {
-    console.log("Start clicked"); // Debug check
     document.getElementById('splash-screen').style.display = 'none';
     document.getElementById('options-menu').style.display = 'flex';
     audio.intro.loop = true;
-    audio.intro.play().catch(e => console.log("Audio play blocked"));
+    audio.intro.play().catch(() => {}); // Catch browser block
 }
 
 function startGame(diff) {
@@ -52,29 +51,20 @@ function startGame(diff) {
     }, 1500);
 }
 
-// --- CONTROLS ---
-
-// 1. Keyboard
+// --- IMPROVED INPUT ---
 window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft' && playerLane > 0) playerLane--;
     if (e.key === 'ArrowRight' && playerLane < 2) playerLane++;
 });
 
-// 2. Mobile Touch (Whole Window Listener)
+// Precise Mobile Touch
 window.addEventListener('touchstart', (e) => {
     if (!gameActive) return;
-    
     const touchX = e.touches[0].clientX;
-    const centerX = window.innerWidth / 2;
-
-    if (touchX < centerX) {
-        if (playerLane > 0) playerLane--;
-    } else {
-        if (playerLane < 2) playerLane++;
-    }
+    const halfWidth = window.innerWidth / 2;
+    if (touchX < halfWidth) { if (playerLane > 0) playerLane--; } 
+    else { if (playerLane < 2) playerLane++; }
 }, { passive: false });
-
-// --- GAME ENGINE ---
 
 function drawRotatedImage(image, x, y, width, height, degrees) {
     ctx.save();
@@ -90,7 +80,7 @@ function animate(time) {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, 400, 600);
 
-    // Road Lines
+    // Cyan Road Lines
     ctx.strokeStyle = "#00ffff";
     ctx.lineWidth = 3;
     ctx.setLineDash([30, 20]);
@@ -101,7 +91,7 @@ function animate(time) {
         ctx.stroke();
     }
 
-    // Bandit (Bad Car)
+    // Bandit Behavior
     if (time - badCar.lastMove > 1200) {
         badCar.targetLane = Math.floor(Math.random() * 3);
         badCar.lastMove = time;
@@ -117,31 +107,30 @@ function animate(time) {
         lastSpawn = time;
     }
 
-    // Process Traffic
+    // Move & Draw Traffic
     enemies.forEach((en, i) => {
         en.y += gameSpeed;
         ctx.drawImage(img.normal, en.x, en.y, en.w, en.h);
 
-        // Collision Check
+        // Precise Collision
         let px = playerLane * (400/3) + 35;
-        if (px + 15 < en.x + en.w - 15 && px + 35 > en.x + 15 && 500 + 15 < en.y + en.h - 15 && 580 > en.y + 15) {
+        if (px + 10 < en.x + 40 && px + 40 > en.x + 10 && 500 + 10 < en.y + 70 && 580 > en.y + 10) {
             gameActive = false;
             audio.race.pause();
             audio.boom.play();
             setTimeout(() => { alert("SCORE: " + Math.floor(score)); location.reload(); }, 500);
         }
-
         if (en.y > 600) { enemies.splice(i, 1); score += 1; }
     });
 
     if (playerLane === badCar.targetLane) score += 0.15;
 
-    // Draw Player Flipped
+    // Player (Flipped 180)
     drawRotatedImage(img.player, playerLane * (400/3) + 35, 500, 50, 80, 180);
     
-    // UI
+    // Red/Green Digital Score
     ctx.fillStyle = (playerLane === badCar.targetLane) ? "#0f0" : "#f00";
-    ctx.font = "bold 35px Courier";
+    ctx.font = "bold 35px Courier New";
     ctx.textAlign = "center";
     ctx.fillText(Math.floor(score).toString().padStart(4, '0'), 200, 45);
 
