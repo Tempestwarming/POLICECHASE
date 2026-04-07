@@ -1,6 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Assets
 const img = { player: new Image(), normal: new Image(), bad: new Image() };
 img.player.src = 'goodcar.png';
 img.normal.src = 'normalcar.png';
@@ -13,6 +14,10 @@ const audio = {
     boom: new Audio('boom.wav'),
     end: new Audio('endgame.mp3')
 };
+
+// Internal Game Resolution (Virtual Pixels)
+const GAME_W = 400;
+const GAME_H = 600;
 
 let gameActive = false;
 let score = 0;
@@ -36,7 +41,7 @@ function startGame(diff) {
     if(diff === 'low') { gameSpeed = 5; spawnRate = 2200; }
     if(diff === 'medium') { gameSpeed = 8; spawnRate = 1600; }
     if(diff === 'high') { gameSpeed = 12; spawnRate = 1000; }
-
+    
     audio.intro.pause();
     audio.ignition.play();
 
@@ -50,13 +55,18 @@ function startGame(diff) {
     }, 1500);
 }
 
-// Controls
+// Fixed Mobile Touch Detection
 window.addEventListener('touchstart', (e) => {
     if (!gameActive) return;
     const touchX = e.touches[0].clientX;
-    const halfWidth = window.innerWidth / 2;
-    if (touchX < halfWidth) { if (playerLane > 0) playerLane--; } 
-    else { if (playerLane < 2) playerLane++; }
+    const rect = canvas.getBoundingClientRect();
+    const relativeX = touchX - rect.left;
+    
+    if (relativeX < rect.width / 2) {
+        if (playerLane > 0) playerLane--;
+    } else {
+        if (playerLane < 2) playerLane++;
+    }
 }, { passive: false });
 
 function drawRotatedImage(image, x, y, width, height, degrees) {
@@ -70,8 +80,9 @@ function drawRotatedImage(image, x, y, width, height, degrees) {
 function animate(time) {
     if (!gameActive) return;
     
+    // Scale drawings to the internal 400x600 resolution
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 400, 600);
+    ctx.fillRect(0, 0, GAME_W, GAME_H);
 
     // Cyan Road
     ctx.strokeStyle = "#00ffff";
@@ -79,68 +90,64 @@ function animate(time) {
     ctx.setLineDash([30, 20]);
     for (let i = 1; i < 3; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * (400/3), 0);
-        ctx.lineTo(i * (400/3), 600);
+        ctx.moveTo(i * (GAME_W/3), 0);
+        ctx.lineTo(i * (GAME_W/3), GAME_H);
         ctx.stroke();
     }
 
-    // Bandit Behavior
+    // Bandit
     if (time - badCar.lastMove > 1200) {
         badCar.targetLane = Math.floor(Math.random() * 3);
         badCar.lastMove = time;
     }
-    let badTargetX = badCar.targetLane * (400/3) + 35;
+    let badTargetX = badCar.targetLane * (GAME_W/3) + (GAME_W/6 - 25);
     badCar.x += (badTargetX - badCar.x) * 0.05;
     ctx.drawImage(img.bad, badCar.x, badCar.y, badCar.w, badCar.h);
 
-    // Leveling Logic (Every 100 points)
+    // Level Check
     let newLevel = Math.floor(score / 100) + 1;
     if (newLevel > currentLevel) {
         currentLevel = newLevel;
-        gameSpeed += 0.5; // Gradually speed up
+        gameSpeed += 0.5;
     }
 
-    // 1000 Point "CATCH" Milestone
     if (score >= 1000) {
         gameActive = false;
-        alert("BANDIT BUSTED! SPEED INCREASING!");
-        score = 0; // Reset or keep going? (Original resets to Round 2)
-        gameSpeed += 3; 
-        enemies = [];
+        alert("BANDIT BUSTED! NEXT ROUND!");
+        score = 0; gameSpeed += 2; enemies = [];
         gameActive = true;
     }
 
-    // Traffic Spawning
+    // Traffic
     if (time - lastSpawn > spawnRate) {
         let lane = Math.floor(Math.random() * 3);
-        enemies.push({ x: lane * (400/3) + 35, y: -100, w: 50, h: 80 });
+        enemies.push({ x: lane * (GAME_W/3) + (GAME_W/6 - 25), y: -100, w: 50, h: 80 });
         lastSpawn = time;
     }
 
-    // Process Traffic
     enemies.forEach((en, i) => {
         en.y += gameSpeed;
         ctx.drawImage(img.normal, en.x, en.y, en.w, en.h);
 
-        // Collision
-        let px = playerLane * (400/3) + 35;
+        // Hitbox Calculation
+        let px = playerLane * (GAME_W/3) + (GAME_W/6 - 25);
         if (px + 10 < en.x + 40 && px + 40 > en.x + 10 && 500 + 10 < en.y + 70 && 580 > en.y + 10) {
             gameActive = false;
             audio.race.pause();
             audio.boom.play();
-            setTimeout(() => { alert("CRASH! Odometer: " + Math.floor(score)); location.reload(); }, 500);
+            setTimeout(() => { alert("SCORE: " + Math.floor(score)); location.reload(); }, 500);
         }
-        if (en.y > 600) { enemies.splice(i, 1); score += 1; }
+        if (en.y > GAME_H) { enemies.splice(i, 1); score += 1; }
     });
 
     if (playerLane === badCar.targetLane) score += 0.25;
 
-    // Draw Player (Flipped 180)
-    drawRotatedImage(img.player, playerLane * (400/3) + 35, 500, 50, 80, 180);
+    // Player
+    drawRotatedImage(img.player, playerLane * (GAME_W/3) + (GAME_W/6 - 25), 500, 50, 80, 180);
     
-    // UI - Digital Score & Level
+    // UI
     ctx.fillStyle = (playerLane === badCar.targetLane) ? "#0f0" : "#f00";
-    ctx.font = "bold 30px Courier New";
+    ctx.font = "bold 28px Courier New";
     ctx.textAlign = "center";
     ctx.fillText("GEAR " + currentLevel, 70, 40);
     ctx.fillText(Math.floor(score).toString().padStart(4, '0'), 330, 40);
