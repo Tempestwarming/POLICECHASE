@@ -1,13 +1,9 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// This function makes sure the game internal resolution matches your screen size
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
+// LOCK INTERNAL MATH TO 400x600
+canvas.width = 400;
+canvas.height = 600;
 
 const img = { player: new Image(), normal: new Image(), bad: new Image() };
 img.player.src = 'goodcar.png';
@@ -31,8 +27,7 @@ let lastSpawn = 0;
 let playerLane = 1;
 let currentLevel = 1;
 
-// Bandit Setup
-let badCar = { lane: 1, x: 0, y: 80, w: 50, h: 80, targetLane: 1, lastMove: 0 };
+let badCar = { lane: 1, x: 175, y: 70, w: 50, h: 80, targetLane: 1, lastMove: 0 };
 
 function showOptions() {
     document.getElementById('splash-screen').style.display = 'none';
@@ -45,10 +40,8 @@ function startGame(diff) {
     if(diff === 'low') { gameSpeed = 5; spawnRate = 2200; }
     if(diff === 'medium') { gameSpeed = 8; spawnRate = 1600; }
     if(diff === 'high') { gameSpeed = 12; spawnRate = 1000; }
-
     audio.intro.pause();
     audio.ignition.play();
-
     setTimeout(() => {
         document.getElementById('options-menu').style.display = 'none';
         canvas.style.display = 'block';
@@ -59,11 +52,13 @@ function startGame(diff) {
     }, 1500);
 }
 
-// Touch controls based on screen halves
+// Touch Input relative to the Canvas element
 window.addEventListener('touchstart', (e) => {
     if (!gameActive) return;
     const touchX = e.touches[0].clientX;
-    if (touchX < window.innerWidth / 2) {
+    const rect = canvas.getBoundingClientRect();
+    const relativeX = touchX - rect.left;
+    if (relativeX < rect.width / 2) {
         if (playerLane > 0) playerLane--;
     } else {
         if (playerLane < 2) playerLane++;
@@ -81,34 +76,32 @@ function drawRotatedImage(image, x, y, width, height, degrees) {
 function animate(time) {
     if (!gameActive) return;
     
-    const W = canvas.width;
-    const H = canvas.height;
-    const L_WIDTH = W / 3;
-
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, 400, 600);
 
     // Road Lines
     ctx.strokeStyle = "#00ffff";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([20, 20]);
+    ctx.lineWidth = 3;
+    ctx.setLineDash([30, 20]);
     for (let i = 1; i < 3; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * L_WIDTH, 0);
-        ctx.lineTo(i * L_WIDTH, H);
+        ctx.moveTo(i * (400/3), 0);
+        ctx.lineTo(i * (400/3), 600);
         ctx.stroke();
     }
 
-    // Bandit (Top Car)
+    // Bandit (Bad Car)
     if (time - badCar.lastMove > 1200) {
         badCar.targetLane = Math.floor(Math.random() * 3);
         badCar.lastMove = time;
     }
-    let badTargetX = badCar.targetLane * L_WIDTH + (L_WIDTH / 2 - 25);
+    let badTargetX = badCar.targetLane * (400/3) + (400/6 - 25);
     badCar.x += (badTargetX - badCar.x) * 0.05;
-    ctx.drawImage(img.bad, badCar.x, badCar.y, 50, 80);
+    ctx.drawImage(img.bad, badCar.x, badCar.y, badCar.w, badCar.h);
 
     // Progression
+    let newLevel = Math.floor(score / 100) + 1;
+    if (newLevel > currentLevel) { currentLevel = newLevel; gameSpeed += 0.7; }
     if (score >= 1000) {
         gameActive = false;
         alert("BANDIT BUSTED!");
@@ -116,41 +109,38 @@ function animate(time) {
         gameActive = true;
     }
 
-    // Traffic Spawning
+    // Traffic
     if (time - lastSpawn > spawnRate) {
         let lane = Math.floor(Math.random() * 3);
-        enemies.push({ x: lane * L_WIDTH + (L_WIDTH / 2 - 25), y: -100 });
+        enemies.push({ x: lane * (400/3) + (400/6 - 25), y: -100 });
         lastSpawn = time;
     }
 
-    // Move Traffic
     enemies.forEach((en, i) => {
         en.y += gameSpeed;
         ctx.drawImage(img.normal, en.x, en.y, 50, 80);
 
-        // Hitbox Collision
-        let px = playerLane * L_WIDTH + (L_WIDTH / 2 - 25);
-        let py = H - 120; // Player sits 120px from bottom
-        if (px < en.x + 40 && px + 40 > en.x && py < en.y + 70 && py + 70 > en.y) {
+        // Hitbox
+        let px = playerLane * (400/3) + (400/6 - 25);
+        if (px + 10 < en.x + 40 && px + 40 > en.x + 10 && 480 + 10 < en.y + 70 && 560 > en.y + 10) {
             gameActive = false;
             audio.race.pause(); audio.boom.play();
             setTimeout(() => { location.reload(); }, 500);
         }
-        if (en.y > H) { enemies.splice(i, 1); score += 1; }
+        if (en.y > 600) { enemies.splice(i, 1); score += 1; }
     });
 
     if (playerLane === badCar.targetLane) score += 0.2;
 
-    // Player (Flipped 180)
-    let playerX = playerLane * L_WIDTH + (L_WIDTH / 2 - 25);
-    let playerY = H - 120;
-    drawRotatedImage(img.player, playerX, playerY, 50, 80, 180);
+    // Player (Positioned at 480y to keep it away from the bottom edge)
+    drawRotatedImage(img.player, playerLane * (400/3) + (400/6 - 25), 480, 50, 80, 180);
     
-    // UI Score
+    // UI
     ctx.fillStyle = (playerLane === badCar.targetLane) ? "#0f0" : "#f00";
-    ctx.font = "bold 20px Courier New";
+    ctx.font = "bold 24px Courier New";
     ctx.textAlign = "center";
-    ctx.fillText("SCORE: " + Math.floor(score).toString().padStart(4, '0'), W/2, 40);
+    ctx.fillText("GEAR " + currentLevel, 70, 40);
+    ctx.fillText(Math.floor(score).toString().padStart(4, '0'), 330, 40);
 
     requestAnimationFrame(animate);
 }
