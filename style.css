@@ -15,20 +15,21 @@ body {
 
 #game-container { 
     position: relative; 
-    width: 95vw; /* Slightly narrower than the screen */
-    height: 90vh; /* Leaves a 10% gap so the bottom car is visible */
-    max-width: 400px; 
-    max-height: 700px;
+    /* This logic keeps the 2:3 ratio based on whatever is smaller: width or height */
+    width: 100vw;
+    height: 150vw; /* 2:3 ratio */
+    max-height: 100vh;
+    max-width: 66.67vh; /* 2:3 ratio */
     background: #000;
-    border: 2px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 canvas { 
     width: 100%; 
     height: 100%; 
     display: block;
-    background: #000;
-    image-rendering: pixelated;
 }
 
 .screen { 
@@ -47,10 +48,9 @@ button {
     background: #111; 
     color: #0ff; 
     border: 3px solid #0ff; 
-    padding: 15px 40px; 
-    font-size: 20px; 
+    padding: 15px 30px; 
+    font-size: 1.2rem; 
     font-family: 'Courier New', monospace;
     cursor: pointer;
     margin: 10px;
-    box-shadow: 0 0 10px #0ff;
 }
