@@ -23,8 +23,8 @@ let spawnRate = 1500;
 let lastSpawn = 0;
 let playerLane = 1;
 
-// "Bad Car" (The Target) Logic
-let badCar = { lane: 1, x: 150, y: 50, w: 50, h: 70, targetLane: 1, lastMove: 0 };
+// Bad Car (The Bandit) - Stays at the top
+let badCar = { lane: 1, x: 150, y: 60, w: 50, h: 80, targetLane: 1, lastMove: 0 };
 
 function showOptions() {
     document.getElementById('splash-screen').style.display = 'none';
@@ -34,8 +34,8 @@ function showOptions() {
 }
 
 function startGame(diff) {
-    if(diff === 'low') { gameSpeed = 5; spawnRate = 2000; }
-    if(diff === 'medium') { gameSpeed = 8; spawnRate = 1500; }
+    if(diff === 'low') { gameSpeed = 5; spawnRate = 2200; }
+    if(diff === 'medium') { gameSpeed = 8; spawnRate = 1600; }
     if(diff === 'high') { gameSpeed = 12; spawnRate = 1000; }
 
     audio.intro.pause();
@@ -47,7 +47,7 @@ function startGame(diff) {
         gameActive = true;
         audio.race.loop = true;
         audio.race.play();
-        animate();
+        animate(0);
     }, 1500);
 }
 
@@ -61,19 +61,28 @@ function spawnTraffic() {
     enemies.push({
         x: lane * (400/3) + 35,
         y: -100,
-        w: 45, h: 70, // Visual size
-        hitW: 30, hitH: 50 // Shrunken Hitbox
+        w: 50, h: 80
     });
+}
+
+function drawRotatedImage(image, x, y, width, height, degrees) {
+    ctx.save();
+    ctx.translate(x + width / 2, y + height / 2);
+    ctx.rotate(degrees * Math.PI / 180);
+    ctx.drawImage(image, -width / 2, -height / 2, width, height);
+    ctx.restore();
 }
 
 function animate(time) {
     if (!gameActive) return;
-    ctx.clearRect(0, 0, 400, 600);
+    
+    // 1. CLEAR AND DRAW ROAD
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, 400, 600);
 
-    // 1. DRAW ROADWAY (VFD Style)
     ctx.strokeStyle = "#00ffff";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([20, 20]);
+    ctx.lineWidth = 3;
+    ctx.setLineDash([30, 20]);
     for (let i = 1; i < 3; i++) {
         ctx.beginPath();
         ctx.moveTo(i * (400/3), 0);
@@ -81,17 +90,16 @@ function animate(time) {
         ctx.stroke();
     }
 
-    // 2. TARGET CAR (BAD CAR) BEHAVIOR
-    // Moves side to side randomly at the TOP
-    if (time - badCar.lastMove > 1000) {
+    // 2. THE BAD CAR (CHASE TARGET)
+    if (time - badCar.lastMove > 1200) {
         badCar.targetLane = Math.floor(Math.random() * 3);
         badCar.lastMove = time;
     }
     let badTargetX = badCar.targetLane * (400/3) + 35;
-    badCar.x += (badTargetX - badCar.x) * 0.1;
+    badCar.x += (badTargetX - badCar.x) * 0.05; // Smooth drifting
     ctx.drawImage(img.bad, badCar.x, badCar.y, badCar.w, badCar.h);
 
-    // 3. TRAFFIC (NORMAL CARS)
+    // 3. TRAFFIC
     if (time - lastSpawn > spawnRate) {
         spawnTraffic();
         lastSpawn = time;
@@ -101,37 +109,40 @@ function animate(time) {
         en.y += gameSpeed;
         ctx.drawImage(img.normal, en.x, en.y, en.w, en.h);
 
-        // HITBOX DETECTION (Shrunken for precision)
+        // SHRUNKEN HITBOX LOGIC
         let px = playerLane * (400/3) + 35;
-        let pW = 30; // Player hitbox width
-        let pH = 50; // Player hitbox height
-
-        // Check collision with traffic
-        if (px < en.x + en.w - 10 && px + pW > en.x + 10 && 500 < en.y + en.h - 10 && 500 + pH > en.y + 10) {
+        if (px + 10 < en.x + en.w - 10 && 
+            px + 40 > en.x + 10 && 
+            500 + 10 < en.y + en.h - 10 && 
+            570 > en.y + 10) {
+            
             gameActive = false;
             audio.race.pause();
             audio.boom.play();
             setTimeout(() => { audio.end.play(); alert("CRASH! Odometer: " + Math.floor(score)); location.reload(); }, 500);
         }
 
-        if (en.y > 600) { enemies.splice(i, 1); score += 1; }
+        if (en.y > 600) {
+            enemies.splice(i, 1);
+            score += 1;
+        }
     });
 
-    // 4. CHASE SCORING
-    // If you are in the same lane as the Bad Car, you gain "Catch" points
+    // 4. SCORE LOGIC (Catching the Bad Car)
     if (playerLane === badCar.targetLane) {
-        score += 0.1; // Slowly increase score while chasing
-        ctx.fillStyle = "#00ff00"; // Glow green when chasing
+        score += 0.2; // Bonus points for stayng behind the bandit
+        ctx.fillStyle = "#00ff00"; // Green glow for catching
     } else {
-        ctx.fillStyle = "#ff0000"; // Red when not
+        ctx.fillStyle = "#ff0000"; // Red glow for chasing
     }
 
-    // 5. PLAYER
-    ctx.drawImage(img.player, playerLane * (400/3) + 35, 500, 50, 80);
+    // 5. DRAW PLAYER (FLIPPED 180 DEGREES)
+    drawRotatedImage(img.player, playerLane * (400/3) + 35, 500, 50, 80, 180);
     
-    // 6. SCORE (7-Segment Red Style)
-    ctx.font = "30px 'Courier New'";
-    ctx.fillText("SCORE: " + Math.floor(score).toString().padStart(4, '0'), 110, 40);
+    // 6. DRAW SCORE ON TOP
+    ctx.font = "bold 35px 'Courier New'";
+    ctx.textAlign = "center";
+    ctx.fillText(Math.floor(score).toString().padStart(4, '0'), 200, 45);
 
     requestAnimationFrame(animate);
 }
