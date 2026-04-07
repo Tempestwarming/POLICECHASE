@@ -3,28 +3,33 @@
     -webkit-tap-highlight-color: transparent; 
 }
 
-body, html { 
-    background: #000; 
+body { 
+    background: #111; 
     margin: 0; 
-    padding: 0; 
-    width: 100%; 
-    height: 100%; 
-    overflow: hidden; 
     display: flex; 
-    flex-direction: column;
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    width: 100vw; 
+    overflow: hidden; 
+    touch-action: none; 
 }
 
 #game-container { 
     position: relative; 
-    flex-grow: 1; /* Fills the whole phone screen */
-    width: 100vw;
-    background: #000;
+    /* This calculates a perfect 2:3 handheld shape that fits ANY screen */
+    width: 66.67vh; 
+    height: 100vh; 
+    max-width: 100vw; 
+    max-height: 150vw; 
+    background: #000; 
+    box-shadow: 0 0 50px #000;
 }
 
 canvas { 
     width: 100%; 
     height: 100%; 
-    display: block;
+    display: block; 
 }
 
 .screen { 
@@ -39,14 +44,16 @@ canvas {
     z-index: 100;
 }
 
-#splash-img { width: 80%; max-width: 300px; margin-bottom: 20px; }
+#splash-img { width: 80%; margin-bottom: 20px; border: 1px solid #0ff; }
 
 button { 
     background: #000; 
     color: #0ff; 
     border: 3px solid #0ff; 
-    padding: 20px 40px; 
-    font-size: 1.5rem; 
+    padding: 15px 30px; 
+    font-size: 1.2rem; 
     font-family: 'Courier New', monospace;
     cursor: pointer;
+    margin: 10px;
+    z-index: 110;
 }
