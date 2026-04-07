@@ -1,7 +1,11 @@
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+    touch-action: none; 
+}
 
 body { 
-    background: #000; 
+    background: #111; /* Dark grey background around the game */
     margin: 0; 
     padding: 0; 
     overflow: hidden; 
@@ -10,26 +14,26 @@ body {
     align-items: center; 
     height: 100vh;
     width: 100vw;
-    touch-action: none;
 }
 
 #game-container { 
     position: relative; 
-    /* This logic keeps the 2:3 ratio based on whatever is smaller: width or height */
+    /* The Magic Sauce: Aspect Ratio Locking */
     width: 100vw;
-    height: 150vw; /* 2:3 ratio */
+    height: 150vw; /* 2:3 Ratio */
     max-height: 100vh;
-    max-width: 66.67vh; /* 2:3 ratio */
+    max-width: 66.67vh; /* 2:3 Ratio */
     background: #000;
+    box-shadow: 0 0 50px #000;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
 }
 
 canvas { 
     width: 100%; 
     height: 100%; 
     display: block;
+    background: #000;
 }
 
 .screen { 
@@ -45,11 +49,11 @@ canvas {
 }
 
 button { 
-    background: #111; 
+    background: #000; 
     color: #0ff; 
     border: 3px solid #0ff; 
     padding: 15px 30px; 
-    font-size: 1.2rem; 
+    font-size: 1.5rem; 
     font-family: 'Courier New', monospace;
     cursor: pointer;
     margin: 10px;
