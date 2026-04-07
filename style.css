@@ -15,10 +15,12 @@ body {
 
 #game-container { 
     position: relative; 
-    width: 100%; 
-    height: 100%; 
-    max-width: 500px; /* Best for mobile portrait */
+    width: 95vw; /* Slightly narrower than the screen */
+    height: 90vh; /* Leaves a 10% gap so the bottom car is visible */
+    max-width: 400px; 
+    max-height: 700px;
     background: #000;
+    border: 2px solid #333;
 }
 
 canvas { 
@@ -26,6 +28,7 @@ canvas {
     height: 100%; 
     display: block;
     background: #000;
+    image-rendering: pixelated;
 }
 
 .screen { 
@@ -40,20 +43,14 @@ canvas {
     z-index: 100;
 }
 
-#splash-img { width: 85%; margin-bottom: 30px; border: 2px solid #0ff; }
-
 button { 
     background: #111; 
     color: #0ff; 
     border: 3px solid #0ff; 
-    padding: 20px 50px; 
-    font-size: 24px; 
+    padding: 15px 40px; 
+    font-size: 20px; 
     font-family: 'Courier New', monospace;
-    font-weight: bold;
     cursor: pointer;
     margin: 10px;
-    text-transform: uppercase;
     box-shadow: 0 0 10px #0ff;
 }
-
-button:active { background: #0ff; color: #000; }
