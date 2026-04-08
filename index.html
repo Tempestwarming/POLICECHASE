@@ -14,13 +14,20 @@
         </div>
 
         <div id="options-menu" class="screen" style="display:none;">
-            <h1>DIFFICULTY</h1>
+            <h1 style="color: #0ff;">SELECT SKILL</h1>
             <button onclick="startGame('low')">LOW</button>
             <button onclick="startGame('medium')">MEDIUM</button>
             <button onclick="startGame('high')">HIGH</button>
         </div>
 
-        <canvas id="gameCanvas" width="400" height="600" style="display:none;"></canvas>
+        <div id="game-over-screen" class="screen" style="display:none;">
+            <h1 style="color: red; font-family: 'Courier New';">CRASHED!</h1>
+            <p id="final-score" style="font-size: 24px; color: #0ff; margin: 10px;"></p>
+            <p id="high-score" style="font-size: 20px; color: gold; margin: 10px;"></p>
+            <button onclick="restartGame()">REPLAY MISSION</button>
+        </div>
+
+        <canvas id="gameCanvas" style="display:none;"></canvas>
     </div>
     <script src="game.js"></script>
 </body>
