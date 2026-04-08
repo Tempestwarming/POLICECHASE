@@ -10,21 +10,21 @@
     <div id="game-container">
         <div id="splash-screen" class="screen">
             <img src="gamepage.png" id="splash-img">
-            <button id="main-start-btn" onclick="showOptions()">START GAME</button>
+            <button id="start-btn">START GAME</button>
         </div>
 
         <div id="options-menu" class="screen" style="display:none;">
             <h1 style="color: #0ff;">SELECT SKILL</h1>
-            <button onclick="startGame('low')">LOW</button>
-            <button onclick="startGame('medium')">MEDIUM</button>
-            <button onclick="startGame('high')">HIGH</button>
+            <button class="diff-btn" data-speed="low">LOW</button>
+            <button class="diff-btn" data-speed="medium">MEDIUM</button>
+            <button class="diff-btn" data-speed="high">HIGH</button>
         </div>
 
         <div id="game-over-screen" class="screen" style="display:none;">
             <h1 style="color: red;">CRASHED!</h1>
             <p id="final-score" style="font-size: 24px; color: #0ff; margin: 10px;"></p>
             <p id="high-score" style="font-size: 20px; color: gold; margin: 10px;"></p>
-            <button onclick="restartGame()">REPLAY MISSION</button>
+            <button id="retry-btn">REPLAY MISSION</button>
         </div>
 
         <canvas id="gameCanvas" style="display:none;"></canvas>
