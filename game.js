@@ -1,11 +1,10 @@
+console.log("Game Script Loaded");
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
-// Lock Internal Resolution
 canvas.width = 400;
 canvas.height = 600;
 
-// Assets
 const img = { player: new Image(), normal: new Image(), bad: new Image() };
 img.player.src = 'goodcar.png';
 img.normal.src = 'normalcar.png';
@@ -31,21 +30,16 @@ let highScore = localStorage.getItem('raceHighScore') || 0;
 
 let badCar = { lane: 1, x: 175, y: 70, w: 50, h: 80, targetLane: 1, lastMove: 0 };
 
-function stopAllAudio() {
-    Object.values(audio).forEach(track => {
-        track.pause();
-        track.currentTime = 0;
-    });
-}
-
 function showOptions() {
+    console.log("Showing Options Menu");
     document.getElementById('splash-screen').style.display = 'none';
     document.getElementById('options-menu').style.display = 'flex';
     audio.intro.loop = true;
-    audio.intro.play().catch(() => {});
+    audio.intro.play().catch(e => console.log("Audio blocked"));
 }
 
 function startGame(diff) {
+    console.log("Starting Game with difficulty:", diff);
     if(diff === 'low') { gameSpeed = 5; spawnRate = 2200; }
     if(diff === 'medium') { gameSpeed = 8; spawnRate = 1800; }
     if(diff === 'high') { gameSpeed = 12; spawnRate = 1400; }
@@ -67,30 +61,25 @@ function gameOver() {
     audio.race.pause();
     audio.boom.play();
     
-    const finalDist = Math.floor(score);
-    if (finalDist > highScore) {
-        highScore = finalDist;
+    if (Math.floor(score) > highScore) {
+        highScore = Math.floor(score);
         localStorage.setItem('raceHighScore', highScore);
     }
 
     setTimeout(() => {
-        stopAllAudio();
         canvas.style.display = 'none';
         document.getElementById('game-over-screen').style.display = 'flex';
-        document.getElementById('final-score').innerText = "DISTANCE: " + finalDist;
+        document.getElementById('final-score').innerText = "DISTANCE: " + Math.floor(score);
         document.getElementById('high-score').innerText = "BEST ODO: " + highScore;
-        audio.end.loop = true;
         audio.end.play().catch(() => {});
     }, 800);
 }
 
 function restartGame() {
-    stopAllAudio();
     location.reload();
 }
 
 function spawnTraffic() {
-    // Patterns: Single lanes or double lanes for weaving
     let patterns = [[0], [1], [2], [0, 2], [0, 1], [1, 2]];
     let patternIndex = (currentLevel > 2 && Math.random() > 0.4) 
         ? Math.floor(Math.random() * patterns.length) 
@@ -100,13 +89,12 @@ function spawnTraffic() {
     selectedPattern.forEach((lane, index) => {
         enemies.push({ 
             x: lane * (400/3) + (400/6 - 25), 
-            y: -100 - (index * 70), // Staggers cars for weaving
+            y: -100 - (index * 70), 
             w: 50, h: 80 
         });
     });
 }
 
-// Touch Input
 window.addEventListener('touchstart', (e) => {
     if (!gameActive) return;
     const touchX = e.touches[0].clientX;
@@ -130,7 +118,7 @@ function animate(time) {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, 400, 600);
 
-    // Cyan Road Lines
+    // Lines
     ctx.strokeStyle = "#00ffff";
     ctx.lineWidth = 3;
     ctx.setLineDash([30, 20]);
@@ -141,7 +129,7 @@ function animate(time) {
         ctx.stroke();
     }
 
-    // Bandit (Target Car)
+    // Bandit
     if (time - badCar.lastMove > 1200) {
         badCar.targetLane = Math.floor(Math.random() * 3);
         badCar.lastMove = time;
@@ -150,7 +138,7 @@ function animate(time) {
     badCar.x += (badTargetX - badCar.x) * 0.05;
     ctx.drawImage(img.bad, badCar.x, badCar.y, badCar.w, badCar.h);
 
-    // Leveling Logic (100 points per level, Max Level 10)
+    // Leveling
     let newLevel = Math.floor(score / 100) + 1;
     if (newLevel > currentLevel && currentLevel < 10) { 
         currentLevel = newLevel; 
@@ -158,18 +146,15 @@ function animate(time) {
         spawnRate = Math.max(650, spawnRate - 180);
     }
 
-    // Spawning
     if (time - lastSpawn > spawnRate) {
         spawnTraffic();
         lastSpawn = time;
     }
 
-    // Process Traffic
     enemies.forEach((en, i) => {
         en.y += gameSpeed;
         ctx.drawImage(img.normal, en.x, en.y, 50, 80);
 
-        // Hitbox Collision
         let px = playerLane * (400/3) + (400/6 - 25);
         if (px + 12 < en.x + 38 && px + 38 > en.x + 12 && 480 + 12 < en.y + 68 && 560 > en.y + 12) {
             gameOver();
@@ -179,10 +164,8 @@ function animate(time) {
 
     if (playerLane === badCar.targetLane) score += 0.25;
 
-    // Player (Flipped 180)
     drawRotatedImage(img.player, playerLane * (400/3) + (400/6 - 25), 480, 50, 80, 180);
     
-    // UI - LEVEL & ODO
     ctx.fillStyle = (playerLane === badCar.targetLane) ? "#0f0" : "#f00";
     ctx.font = "bold 22px Courier New";
     ctx.textAlign = "left";
