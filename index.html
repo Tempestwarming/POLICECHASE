@@ -10,7 +10,7 @@
     <div id="game-container">
         <div id="splash-screen" class="screen">
             <img src="gamepage.png" id="splash-img">
-            <button onclick="showOptions()">START GAME</button>
+            <button id="main-start-btn" onclick="showOptions()">START GAME</button>
         </div>
 
         <div id="options-menu" class="screen" style="display:none;">
@@ -21,7 +21,7 @@
         </div>
 
         <div id="game-over-screen" class="screen" style="display:none;">
-            <h1 style="color: red; font-family: 'Courier New';">CRASHED!</h1>
+            <h1 style="color: red;">CRASHED!</h1>
             <p id="final-score" style="font-size: 24px; color: #0ff; margin: 10px;"></p>
             <p id="high-score" style="font-size: 20px; color: gold; margin: 10px;"></p>
             <button onclick="restartGame()">REPLAY MISSION</button>
